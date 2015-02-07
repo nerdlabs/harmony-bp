@@ -1,0 +1,15 @@
+coverage
+docs
+hooks
+test
+.coveralls.yml
+.editorconfig
+.gitignore
+.jscsrc
+.jsfmtrc
+.jshintrc
+.nodemonrc
+.travis.yml
+*.sublime-*
+test.js
+/_test/
