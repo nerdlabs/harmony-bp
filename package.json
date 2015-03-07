@@ -12,9 +12,19 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon lib/server.js",
+    "start": "nodemon lib/server.js & npm run _watch",
+    "build": "npm run _clean && npm run _build-css & npm run _build-js-prod",
+
+    "lint": "find lib src -name '*.js' | xargs jsxhint -c .jshintrc",
     "install-hooks": "cp hooks/* .git/hooks/",
-    "jshint": "find lib src -name '*.js' | xargs jsxhint -c .jshintrc"
+
+    "_watch": "npm run _clean && npm run _watch-css & npm run _watch-js",
+    "_clean": "rm -rf dist/* && mkdir -p dist/",
+    "_build-js-prod": "NODE_ENV=production bash -c 'npm run _build-js'",
+    "_build-js": "browserify -g uglifyify ./ -o dist/bundle.js",
+    "_watch-js": "watchify -d ./ -o dist/bundle.js",
+    "_build-css": "myth -c src/components/main.css dist/bundle.css",
+    "_watch-css": "myth -sw src/components/main.css dist/bundle.css"
   },
   "config": {
     "port": "8080"
