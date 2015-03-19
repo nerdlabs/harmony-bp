@@ -1,63 +1,42 @@
-import { Dispatcher } from 'flux';
-import Immutable from 'immutable';
-import Cursor from 'immutable/contrib/cursor';
+import { EventEmitter } from 'events';
+import { addons as ReactAddons } from 'react/addons';
 
 
-const dispatcher = new Dispatcher();
-const states = [];
-
-let state;
+let state = {};
 
 
-export function createCursor(keyPath) {
-    return Cursor.from(state, keyPath, replace);
-}
+export default {
 
-
-export function replace(newState) {
-    if (state) {
-        states.push(state);
-    }
-    while (states.length > 10) {
-        states.shift();
-    }
-    state = newState;
-    dispatcher.dispatch(state);
-}
-
-
-export function rewind() {
-    state = states.length ? states.pop() : state;
-    dispatcher.dispatch(state);
-}
-
-
-export function update() {
-    replace(state.mergeDeep.apply(state, arguments));
-}
-
-
-export function fromJS() {
-    replace(Immutable.fromJS.apply(Immutable, arguments));
-}
-
-
-export function toJS() {
-    return state.toJS.apply(state, arguments);
-}
-
-
-export const mixin = {
-    componentDidMount() {
-        this._dispatcherToken = dispatcher.register(() => {
-            this.replaceState(this.getInitialState());
-            this.render();
-        });
+    _onStateChange() {
+        this.setState(this.getInitialState());
+        this.render();
     },
+
+    componentDidMount() {
+        emitter.addListener('change', this._onStateChange);
+    },
+
     componentWillUnmount() {
-        dispatcher.unregister(this._dispatcherToken);
+        emitter.removeListener('change', this._onStateChange);
+    },
+
+    getCursor(keyPath = []) {
+        return Object.assign(
+            {
+                update(updates) {
+                    states.push(state);
+                    state = ReactAddons.update(state, keyPath.reduceRight(
+                        (u, k) => { return { [k]: u }; },
+                        updates
+                    ));
+                    emitter.emit('change', state);
+                }
+            },
+            keyPath.reduce((s, k) => s[k], state)
+        );
     }
 };
 
+export const states = [];
 
-export default dispatcher;
+export const emitter = new EventEmitter();

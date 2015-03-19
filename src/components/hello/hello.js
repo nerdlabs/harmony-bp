@@ -1,21 +1,21 @@
 import React from 'react';
-import * as state from '../../state';
+import state from '../../state';
 
 
 // #TODO: remove debug code
-state.fromJS({ a: { b: { c: 1 } } });
+state.getCursor().update({ $set: { a: { b: { c: 1 } } } });
 
 
 export default React.createClass({
 
-    mixins: [state.mixin],
+    mixins: [ state ],
 
     getInitialState() {
-        return state.createCursor(['a', 'b']);
+        return this.getCursor(['a', 'b']);
     },
 
     handleClick() {
-        this.state.update('c', v => v + 1 );
+        this.state.update({ c: { $apply: v => v + 1 } });
     },
 
     render() {
@@ -23,7 +23,7 @@ export default React.createClass({
             <section>
                 <input/>
                 <div onClick={ this.handleClick }>
-                    click count: { this.state.get('c') }
+                    click count: { this.state.c }
                 </div>
             </section>
         );
