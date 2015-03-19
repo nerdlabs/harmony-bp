@@ -52,8 +52,6 @@
   },
   "dependencies": {
     "babel": "^4.7.2",
-    "flux": "^2.0.1",
-    "immutable": "^3.6.4",
     "react": "^0.12.2",
     "react-router": "^0.12.4"
   },
