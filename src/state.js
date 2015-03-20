@@ -1,51 +1,39 @@
 import { EventEmitter } from 'events';
 import update from 'react/lib/update';
-import deepEqual from 'deep-equal';
 import deepFreeze from 'deep-freeze';
-
+import deepEqual from 'deep-equal';
 
 let state = Object.freeze({});
 
-
 export default {
 
-    getCursor(keyPath = []) {
-        return Object.freeze(Object.assign(
-            {
-                update(updates) {
-                    state = deepFreeze(update(
-                        state,
-                        keyPath.reduceRight(
-                            (u, k) => { return { [k]: u }; },
-                            updates
-                        )
-                    ));
-                    emitter.emit('change', state);
-                }
-            },
-            keyPath.reduce((s, k) => s[k], state)
+    updateState(updates = {}, statePath = null) {
+        statePath = statePath || this.statePath || [];
+        state = deepFreeze(update(
+            state,
+            statePath.reduceRight((u, k) => { return { [k]: u }; }, updates)
         ));
+        emitter.emit('update', state);
     },
 
     getInitialState() {
-        return this.getCursor(this.keyPath || []);
-    },
-
-    setNextState() {
-        this.setState(this.getInitialState());
+        return this.statePath.reduce((s, k) => s[k], state);
     },
 
     componentDidMount() {
-        emitter.addListener('change', this.setNextState);
+        emitter.addListener('update', this._refreshState);
     },
 
     componentWillUnmount() {
-        emitter.removeListener('change', this.setNextState);
+        emitter.removeListener('update', this._refreshState);
     },
 
     shouldComponentUpdate(nextProps, nextState) {
         return !deepEqual(this.state, nextState);
+    },
+
+    _refreshState() {
+        this.setState(this.getInitialState());
     }
 };
-
 export const emitter = new EventEmitter();

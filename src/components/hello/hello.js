@@ -3,17 +3,17 @@ import state from '../../state';
 
 
 // #TODO: remove debug code
-state.getCursor().update({ $set: { a: { b: { c: 1 } } } });
+state.updateState({ $set: { a: { b: { c: 1 } } } });
 
 
 export default React.createClass({
 
     mixins: [ state ],
 
-    keyPath: ['a', 'b'],
+    statePath: ['a', 'b'],
 
     handleClick() {
-        this.state.update({ c: { $apply: v => v + 1 } });
+        this.updateState({ c: { $apply: v => v + 1 } });
     },
 
     render() {
