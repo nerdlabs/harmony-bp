@@ -1,42 +1,51 @@
 import { EventEmitter } from 'events';
-import { addons as ReactAddons } from 'react/addons';
+import update from 'react/lib/update';
+import deepEqual from 'deep-equal';
+import deepFreeze from 'deep-freeze-strict';
 
 
-let state = {};
+let state = Object.freeze({});
 
 
 export default {
 
-    _onStateChange() {
-        this.setState(this.getInitialState());
-        this.render();
-    },
-
-    componentDidMount() {
-        emitter.addListener('change', this._onStateChange);
-    },
-
-    componentWillUnmount() {
-        emitter.removeListener('change', this._onStateChange);
-    },
-
     getCursor(keyPath = []) {
-        return Object.assign(
+        return Object.freeze(Object.assign(
             {
                 update(updates) {
-                    states.push(state);
-                    state = ReactAddons.update(state, keyPath.reduceRight(
-                        (u, k) => { return { [k]: u }; },
-                        updates
+                    state = deepFreeze(update(
+                        state,
+                        keyPath.reduceRight(
+                            (u, k) => { return { [k]: u }; },
+                            updates
+                        )
                     ));
                     emitter.emit('change', state);
                 }
             },
             keyPath.reduce((s, k) => s[k], state)
-        );
+        ));
+    },
+
+    getInitialState() {
+        return this.getCursor(this.keyPath || []);
+    },
+
+    setNextState() {
+        this.setState(this.getInitialState());
+    },
+
+    componentDidMount() {
+        emitter.addListener('change', this.setNextState);
+    },
+
+    componentWillUnmount() {
+        emitter.removeListener('change', this.setNextState);
+    },
+
+    shouldComponentUpdate(nextProps, nextState) {
+        return !deepEqual(this.state, nextState);
     }
 };
-
-export const states = [];
 
 export const emitter = new EventEmitter();
