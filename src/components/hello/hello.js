@@ -1,14 +1,13 @@
 import React from 'react';
-import state from '../../state';
+import * as state from '../../state';
 
 
-// #TODO: remove debug code
-state.updateState({ $set: { a: { b: { c: 1 } } } });
+state.update({ $set: { a: { b: { c: 0 } } } });
 
 
 export default React.createClass({
 
-    mixins: [ state ],
+    mixins: [ state.mixin ],
 
     statePath: ['a', 'b'],
 

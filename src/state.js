@@ -1,23 +1,34 @@
 import { EventEmitter } from 'events';
-import update from 'react/lib/update';
+import immutableUpdate from 'react/lib/update';
 import deepFreeze from 'deep-freeze';
 import deepEqual from 'deep-equal';
 
 let state = Object.freeze({});
 
-export default {
+export function update(updates, ...keyPath) {
+    state = deepFreeze(immutableUpdate(
+        state,
+        keyPath.reduceRight((u, k) => { return { [k]: u }; }, updates)
+    ));
+    emitter.emit('update', state);
+}
 
-    updateState(updates = {}, statePath = null) {
-        statePath = statePath || this.statePath || [];
-        state = deepFreeze(update(
-            state,
-            statePath.reduceRight((u, k) => { return { [k]: u }; }, updates)
-        ));
-        emitter.emit('update', state);
+export function get(...keyPath) {
+    return keyPath.reduce((s, k) => s[k], state);
+}
+
+export const mixin = {
+
+    updateState(updates = {}) {
+        update(updates, ...this.statePath);
     },
 
     getInitialState() {
-        return this.statePath.reduce((s, k) => s[k], state);
+        return get(...this.statePath);
+    },
+
+    shouldComponentUpdate(nextProps, nextState) {
+        return !deepEqual(this.state, nextState);
     },
 
     componentDidMount() {
@@ -28,12 +39,9 @@ export default {
         emitter.removeListener('update', this._refreshState);
     },
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return !deepEqual(this.state, nextState);
-    },
-
     _refreshState() {
         this.setState(this.getInitialState());
     }
 };
+
 export const emitter = new EventEmitter();
