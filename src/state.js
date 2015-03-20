@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import update from 'react/lib/update';
 import deepEqual from 'deep-equal';
-import deepFreeze from 'deep-freeze-strict';
+import deepFreeze from 'deep-freeze';
 
 
 let state = Object.freeze({});
