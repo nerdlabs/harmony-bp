@@ -10,9 +10,7 @@ export default React.createClass({
 
     mixins: [ state ],
 
-    getInitialState() {
-        return this.getCursor(['a', 'b']);
-    },
+    keyPath: ['a', 'b'],
 
     handleClick() {
         this.state.update({ c: { $apply: v => v + 1 } });
