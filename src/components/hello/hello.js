@@ -1,13 +1,11 @@
 import React from 'react';
-import * as state from '../../state';
+import { StateMixin, update } from '../../state';
 
-
-state.update({ $set: { a: { b: { c: 0 } } } });
-
+update({ $set: { a: { b: { c: 1 } } } } );
 
 export default React.createClass({
 
-    mixins: [ state.mixin ],
+    mixins: [ StateMixin ],
 
     statePath: ['a', 'b'],
 

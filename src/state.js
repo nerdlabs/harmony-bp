@@ -1,47 +1,48 @@
-import { EventEmitter } from 'events';
+import { Dispatcher } from 'flux';
 import immutableUpdate from 'react/lib/update';
 import deepFreeze from 'deep-freeze';
 import deepEqual from 'deep-equal';
 
 let state = Object.freeze({});
 
-export function update(updates, ...keyPath) {
+export const dispatcher = new Dispatcher();
+
+export function get(statePath = []) {
+    return statePath.reduce((s, k) => (s || {})[k], state);
+}
+
+export function update(spec = {}, statePath = []) {
     state = deepFreeze(immutableUpdate(
         state,
-        keyPath.reduceRight((u, k) => { return { [k]: u }; }, updates)
+        statePath.reduceRight((s, k) => { return { [k]: s }; }, spec)
     ));
-    emitter.emit('update', state);
+    dispatcher.dispatch(state);
 }
 
-export function get(...keyPath) {
-    return keyPath.reduce((s, k) => s[k], state);
-}
+export const StateMixin = {
 
-export const mixin = {
-
-    updateState(updates = {}) {
-        update(updates, ...this.statePath);
+    updateState(spec = {}) {
+        update(spec, this.statePath);
     },
 
     getInitialState() {
-        return get(...this.statePath);
+        return get(this.statePath);
+    },
+
+    componentDidMount() {
+        this._stateToken = dispatcher.register(() => {
+            this.setState(this.getInitialState());
+        });
+    },
+
+    componentWillUnmount() {
+        if (this._stateToken) {
+            dispatcher.unregister(this._stateToken);
+            delete this._stateToken;
+        }
     },
 
     shouldComponentUpdate(nextProps, nextState) {
         return !deepEqual(this.state, nextState);
-    },
-
-    componentDidMount() {
-        emitter.addListener('update', this._refreshState);
-    },
-
-    componentWillUnmount() {
-        emitter.removeListener('update', this._refreshState);
-    },
-
-    _refreshState() {
-        this.setState(this.getInitialState());
     }
 };
-
-export const emitter = new EventEmitter();
