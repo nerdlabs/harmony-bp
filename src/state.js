@@ -2,27 +2,56 @@ import { Dispatcher } from 'flux';
 import immutableUpdate from 'react/lib/update';
 import deepFreeze from 'deep-freeze';
 import deepEqual from 'deep-equal';
+import initialState from './state.json';
 
-let state = Object.freeze({});
+let state = deepFreeze(initialState);
 
-export const dispatcher = new Dispatcher();
+let dispatcher = new Dispatcher();
 
-export function get(statePath = []) {
+function get(statePath = []) {
     return statePath.reduce((s, k) => (s || {})[k], state);
 }
 
-export function update(spec = {}, statePath = []) {
+function update(statePath = [], spec = {}) {
     state = deepFreeze(immutableUpdate(
         state,
         statePath.reduceRight((s, k) => { return { [k]: s }; }, spec)
     ));
-    dispatcher.dispatch(state);
+    dispatcher.dispatch();
 }
+
+function createHandle(...statePath) {
+
+    let localState = get(statePath);
+
+    let localDispatcher = new Dispatcher();
+
+    return Object.create({
+
+        dispatcher: localDispatcher,
+
+        update: update.bind(null, statePath),
+
+        get: get.bind(null, statePath),
+
+        detach: dispatcher.unregister.bind(
+            dispatcher,
+            dispatcher.register(() => {
+                let nextState = get(statePath);
+                if (!deepEqual(localState, nextState)) {
+                    localState = nextState;
+                    localDispatcher.dispatch(nextState);
+                }
+            })
+        )
+    });
+}
+export default Object.assign(createHandle(), { createHandle });
 
 export const StateMixin = {
 
     updateState(spec = {}) {
-        update(spec, this.statePath);
+        update(this.statePath, spec);
     },
 
     getInitialState() {

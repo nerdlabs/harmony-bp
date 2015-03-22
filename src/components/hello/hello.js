@@ -1,7 +1,7 @@
 import React from 'react';
-import { StateMixin, update } from '../../state';
+import state, { StateMixin } from '../../state';
 
-update({ $set: { a: { b: { c: 1 } } } } );
+state.dispatcher.register(console.log.bind(console));
 
 export default React.createClass({
 
