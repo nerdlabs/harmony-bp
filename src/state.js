@@ -30,9 +30,9 @@ function createHandle(...statePath) {
 
         dispatcher: localDispatcher,
 
-        update: update.bind(null, statePath),
-
         get: get.bind(null, statePath),
+
+        update: update.bind(null, statePath),
 
         detach: dispatcher.unregister.bind(
             dispatcher,
@@ -65,10 +65,7 @@ export const StateMixin = {
     },
 
     componentWillUnmount() {
-        if (this._stateToken) {
-            dispatcher.unregister(this._stateToken);
-            delete this._stateToken;
-        }
+        dispatcher.unregister(this._stateToken);
     },
 
     shouldComponentUpdate(nextProps, nextState) {
