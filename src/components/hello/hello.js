@@ -1,7 +1,5 @@
 import React from 'react';
-import state, { StateMixin } from '../../state';
-
-state.dispatcher.register(console.log.bind(console));
+import { StateMixin } from '../../state';
 
 export default React.createClass({
 
