@@ -1,32 +1,33 @@
-import { Dispatcher } from 'flux';
-import immutableUpdate from 'react/lib/update';
-import deepFreeze from 'deep-freeze';
+import Flux from 'flux';
+import React from 'react/addons';
 import deepEqual from 'deep-equal';
-import initialState from './state.json';
+import state from './state.json';
 
-let state = deepFreeze(initialState);
 
-let dispatcher = new Dispatcher();
+const dispatcher = new Flux.Dispatcher();
+
 
 function get(statePath = []) {
     return statePath.reduce((s, k) => (s || {})[k], state);
 }
 
+
 function update(statePath = [], spec = {}) {
-    state = deepFreeze(immutableUpdate(
+    state = React.addons.update(
         state,
         statePath.reduceRight((s, k) => { return { [k]: s }; }, spec)
-    ));
+    );
     dispatcher.dispatch();
 }
 
-function createHandle(...statePath) {
+
+export function createHandle(...statePath) {
 
     let localState = get(statePath);
 
-    let localDispatcher = new Dispatcher();
+    let localDispatcher = new Flux.Dispatcher();
 
-    return Object.create({
+    return {
 
         dispatcher: localDispatcher,
 
@@ -38,15 +39,15 @@ function createHandle(...statePath) {
             dispatcher,
             dispatcher.register(() => {
                 let nextState = get(statePath);
-                if (!deepEqual(localState, nextState)) {
+                if (!deepEqual(localState, nextState, { strict: true })) {
                     localState = nextState;
                     localDispatcher.dispatch(nextState);
                 }
             })
         )
-    });
+    };
 }
-export default Object.assign(createHandle(), { createHandle });
+
 
 export const StateMixin = {
 
@@ -69,6 +70,12 @@ export const StateMixin = {
     },
 
     shouldComponentUpdate(nextProps, nextState) {
-        return !deepEqual(this.state, nextState);
+        return (
+            !deepEqual(this.props, nextProps, { strict: true }) ||
+            !deepEqual(this.state, nextState, { strict: true })
+        );
     }
 };
+
+
+export default Object.assign(createHandle(), { createHandle, StateMixin });
