@@ -1,5 +1,22 @@
-import React from 'react';
+import React from 'react/addons';
 import { StateMixin } from '../../state';
+
+
+export const CountDisplay = React.createClass({
+
+    mixins: [ React.addons.PureRenderMixin ],
+
+    propTypes: {
+        count: React.PropTypes.number.isRequired
+    },
+
+    render() {
+        return (
+            <div><b>Click count:</b> { this.props.count }</div>
+        );
+    }
+});
+
 
 export default React.createClass({
 
@@ -14,9 +31,9 @@ export default React.createClass({
     render() {
         return (
             <section>
-                <input/>
+                <input />
                 <div onClick={ this.handleClick }>
-                    click count: { this.state.c }
+                    <CountDisplay count={this.state.c} />
                 </div>
             </section>
         );
