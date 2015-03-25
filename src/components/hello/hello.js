@@ -6,10 +6,6 @@ export const CountDisplay = React.createClass({
 
     mixins: [ React.addons.PureRenderMixin ],
 
-    propTypes: {
-        count: React.PropTypes.number.isRequired
-    },
-
     render() {
         return (
             <div><b>Click count:</b> { this.props.count }</div>
